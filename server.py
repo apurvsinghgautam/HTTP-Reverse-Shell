@@ -3,7 +3,7 @@
 import BaseHTTPServer   # Built-in HTTP library
 import os,cgi
 
-HOST_NAME = '192.168.158.128'   # Host IP address
+HOST_NAME = '10.10.10.10'   # Host IP address
 PORT_NUMBER = 80   # Listening port number 
 
 
