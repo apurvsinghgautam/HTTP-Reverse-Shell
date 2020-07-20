@@ -1,5 +1,7 @@
 # HTTP-Reverse-Shell
 
+![https://img.shields.io/github/stars/apurvsinghgautam/HTTP-Reverse-Shell](https://img.shields.io/github/stars/apurvsinghgautam/HTTP-Reverse-Shell)
+
 This is a HTTP Reverse Shell programmed in Python. It is used to make Reverse HTTP connections from client side to server side.
 
 # Prerequisites
