@@ -11,6 +11,10 @@ ATTACKER_PORT = 8080
 
 class MyHandler(BaseHTTPRequestHandler):
 
+    # Don't print: 127.0.0.1 - - [22/Jun/2021 21:29:43] "POST / HTTP/1.1" 200
+    def log_message(self, format, *args):
+        pass
+
     def save_file(self):
         print(self.headers['content-type'])
         content_type, _ = cgi.parse_header(self.headers['content-type'])
