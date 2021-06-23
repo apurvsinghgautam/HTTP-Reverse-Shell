@@ -2,19 +2,23 @@
 
 ![https://img.shields.io/github/stars/apurvsinghgautam/HTTP-Reverse-Shell](https://img.shields.io/github/stars/apurvsinghgautam/HTTP-Reverse-Shell) ![https://img.shields.io/github/forks/apurvsinghgautam/HTTP-Reverse-Shell](https://img.shields.io/github/forks/apurvsinghgautam/HTTP-Reverse-Shell)
 
-[![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://forthebadge.com) 
+[![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://forthebadge.com)
 
-This is a HTTP Reverse Shell programmed in Python. It is used to make Reverse HTTP connections from client side to server side.
+A reverse shell over HTTP (dodges deep packet inspection). Using Python 3 and no external dependencies needed.
 
 # Prerequisites
-- Python
+- Python 3 (on both the attacker and the target machine
 
 # Usage
-- Transfer the client program on client side
-- Transfer the server program on server side
-- Run the server side program to start listening
-- Run the client side program
-- Connection will be established
-
-# Contributor
-- [Apurv Singh Gautam](https://github.com/apurvsinghgautam)
+1. Change `ATTACKER_IP` to the actual IP of the attacker on `client.py`
+2. Change `ATTACKER_PORT` on both `client.py` and `server.py` (or you can just use the default)
+3. Transfer `client.py` to the target machine
+4. Run `server.py` on the attacker machine
+```
+python3 server.py
+```
+5. Run `client.py` on the target machine
+```
+python3 client.py
+```
+6. Connection will be established
