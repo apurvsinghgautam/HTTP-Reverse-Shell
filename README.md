@@ -2,8 +2,6 @@
 
 ![https://img.shields.io/github/stars/apurvsinghgautam/HTTP-Reverse-Shell](https://img.shields.io/github/stars/apurvsinghgautam/HTTP-Reverse-Shell) ![https://img.shields.io/github/forks/apurvsinghgautam/HTTP-Reverse-Shell](https://img.shields.io/github/forks/apurvsinghgautam/HTTP-Reverse-Shell)
 
-[![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://forthebadge.com)
-
 A reverse shell over HTTP (dodges deep packet inspection). Using Python 3 and no external dependencies needed.
 
 # Prerequisites
